@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace StatsdClient
 {
@@ -60,31 +61,35 @@ namespace StatsdClient
 
         public void Send(string command)
         {
-            Send(Encoding.UTF8.GetBytes(command));
+            SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(command))).Wait();
         }
 
-        private void Send(byte[] encodedCommand)
+        public Task SendAsync(string command)
         {
-            if (MaxUDPPacketSize > 0 && encodedCommand.Length > MaxUDPPacketSize)
+            return SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(command)));
+        }
+
+        private async Task SendAsync(ArraySegment<byte> encodedCommand)
+        {
+            if (MaxUDPPacketSize > 0 && encodedCommand.Count > MaxUDPPacketSize)
             {
                 // If the command is too big to send, linear search backwards from the maximum
-                // packet size to see if we can find a newline delimiting two stats. If we can,
+                // packet size (taking into account the offset in the array)
+                // to see if we can find a newline delimiting two stats. If we can,
                 // split the message across the newline and try sending both componenets individually
                 byte newline = Encoding.UTF8.GetBytes("\n")[0];
-                for (int i = MaxUDPPacketSize; i > 0; i--)
+                for (int i = MaxUDPPacketSize + encodedCommand.Offset; i > encodedCommand.Offset; i--)
                 {
-                    if (encodedCommand[i] == newline)
+                    if (encodedCommand.Array[i] == newline)
                     {
-                        byte[] encodedCommandFirst = new byte[i];
-                        Array.Copy(encodedCommand, encodedCommandFirst, encodedCommandFirst.Length); // encodedCommand[0..i-1]
-                        Send(encodedCommandFirst);
+                        var encodedCommandFirst = new ArraySegment<byte>(encodedCommand.Array, encodedCommand.Offset, i);
 
-                        int remainingCharacters = encodedCommand.Length - i - 1;
+                        await SendAsync(encodedCommandFirst).ConfigureAwait(false);
+
+                        int remainingCharacters = encodedCommand.Count - i - 1;
                         if (remainingCharacters > 0)
                         {
-                            byte[] encodedCommandSecond = new byte[remainingCharacters];
-                            Array.Copy(encodedCommand, i + 1, encodedCommandSecond, 0, encodedCommandSecond.Length); // encodedCommand[i+1..end]
-                            Send(encodedCommandSecond);
+                            await SendAsync(new ArraySegment<byte>(encodedCommand.Array, i + 1, remainingCharacters)).ConfigureAwait(false);
                         }
 
                         return; // We're done here if we were able to split the message.
@@ -97,7 +102,7 @@ namespace StatsdClient
                     // be sent without issue.
                 }
             }
-            UDPSocket.SendTo(encodedCommand, encodedCommand.Length, SocketFlags.None, IPEndpoint);
+            await UDPSocket.SendToAsync(encodedCommand, SocketFlags.None, IPEndpoint).ConfigureAwait(false);
         }
 
         public void Dispose()
