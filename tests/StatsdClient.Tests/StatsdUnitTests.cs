@@ -967,7 +967,7 @@ namespace StatsdClient.Tests
             var message = builder;
 
             var exception = Assert.Throws<AggregateException>(() => s.Send("name", 0, serviceCheckMessage: message + "x"));
-            Assert.That(exception.Message, Contains.Substring("payload is too big"));
+            Assert.That(exception.InnerException.Message, Contains.Substring("payload is too big"));
         }
 
         [Test]
@@ -996,7 +996,7 @@ namespace StatsdClient.Tests
             var name = builder;
 
             var exception = Assert.Throws<AggregateException>(() => s.Send(name + "x", 0, truncateIfTooLong: true));
-            Assert.That(exception.Message, Contains.Substring("payload is too big"));
+            Assert.That(exception.InnerException.Message, Contains.Substring("payload is too big"));
         }
 
         [Test]
