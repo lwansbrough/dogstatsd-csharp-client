@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace StatsdClient
 {
@@ -220,8 +221,13 @@ namespace StatsdClient
 
         public void Send(string title, string text, string alertType = null, string aggregationKey = null, string sourceType = null, int? dateHappened = null, string priority = null, string hostname = null, string[] tags = null, bool truncateIfTooLong = false)
         {
+            SendAsync(title, text, alertType, aggregationKey, sourceType, dateHappened, priority, hostname, tags, truncateIfTooLong).Wait();
+        }
+
+        public async Task SendAsync(string title, string text, string alertType = null, string aggregationKey = null, string sourceType = null, int? dateHappened = null, string priority = null, string hostname = null, string[] tags = null, bool truncateIfTooLong = false)
+        {
             truncateIfTooLong = truncateIfTooLong || TruncateIfTooLong;
-            Send(Event.GetCommand(title, text, alertType, aggregationKey, sourceType, dateHappened, priority, hostname, tags, truncateIfTooLong));
+            await SendAsync(Event.GetCommand(title, text, alertType, aggregationKey, sourceType, dateHappened, priority, hostname, tags, truncateIfTooLong)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -239,22 +245,38 @@ namespace StatsdClient
         public void Send(string name, int status, int? timestamp = null, string hostname = null, string[] tags = null, string serviceCheckMessage = null, bool truncateIfTooLong = false)
         {
             truncateIfTooLong = truncateIfTooLong || TruncateIfTooLong;
-            Send(ServiceCheck.GetCommand(name, status, timestamp, hostname, tags, serviceCheckMessage, truncateIfTooLong));
+            SendAsync(name, status, timestamp, hostname, tags, serviceCheckMessage, truncateIfTooLong).Wait();
+        }
+
+        public async Task SendAsync(string name, int status, int? timestamp = null, string hostname = null, string[] tags = null, string serviceCheckMessage = null, bool truncateIfTooLong = false)
+        {
+            truncateIfTooLong = truncateIfTooLong || TruncateIfTooLong;
+            await SendAsync(ServiceCheck.GetCommand(name, status, timestamp, hostname, tags, serviceCheckMessage, truncateIfTooLong)).ConfigureAwait(false);
         }
 
         public void Send<TCommandType, T>(string name, T value, double sampleRate = 1.0, string[] tags = null) where TCommandType : Metric
         {
+            SendAsync<TCommandType, T>(name, value, sampleRate, tags).Wait();
+        }
+
+        public async Task SendAsync<TCommandType, T>(string name, T value, double sampleRate = 1.0, string[] tags = null) where TCommandType : Metric
+        {
             if (RandomGenerator.ShouldSend(sampleRate))
             {
-                Send(Metric.GetCommand<TCommandType, T>(_prefix, name, value, sampleRate, tags));
+                await SendAsync(Metric.GetCommand<TCommandType, T>(_prefix, name, value, sampleRate, tags)).ConfigureAwait(false);
             }
         }
 
         public void Send(string command)
         {
+            SendAsync(command).Wait();
+        }
+
+        public async Task SendAsync(string command)
+        {
             try
             {
-                Udp.Send(command);
+                await Udp.SendAsync(command).ConfigureAwait(false);
                 // clear buffer (keep existing behavior)
                 if (Commands.Count > 0)
                     Commands = new List<string>();
@@ -267,10 +289,16 @@ namespace StatsdClient
 
         public void Send()
         {
+            SendAsync().Wait();
+        }
+
+
+        public async Task SendAsync()
+        {
             int count = Commands.Count;
             if (count < 1) return;
 
-            Send(1 == count ? Commands[0] : string.Join("\n", Commands.ToArray()));
+            await SendAsync(1 == count ? Commands[0] : string.Join("\n", Commands.ToArray())).ConfigureAwait(false);
         }
 
         public void Add(Action actionToTime, string statName, double sampleRate = 1.0, string[] tags = null)
@@ -291,6 +319,11 @@ namespace StatsdClient
 
         public void Send(Action actionToTime, string statName, double sampleRate = 1.0, string[] tags = null)
         {
+            SendAsync(actionToTime, statName, sampleRate, tags).Wait();
+        }
+
+        public async Task SendAsync(Action actionToTime, string statName, double sampleRate = 1.0, string[] tags = null)
+        {
             var stopwatch = StopwatchFactory.Get();
 
             try
@@ -301,7 +334,7 @@ namespace StatsdClient
             finally
             {
                 stopwatch.Stop();
-                Send<Timing, int>(statName, stopwatch.ElapsedMilliseconds(), sampleRate, tags);
+                await SendAsync<Timing, int>(statName, stopwatch.ElapsedMilliseconds(), sampleRate, tags).ConfigureAwait(false);
             }
         }
     }

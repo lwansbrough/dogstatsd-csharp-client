@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 using StatsdClient;
@@ -46,6 +46,12 @@ namespace Tests
         class CountingUDP : IStatsdUDP
         {
             readonly IDictionary<string, int> _commands = new Dictionary<string, int>();
+
+            public Task SendAsync(string command)
+            {
+                Send(command);
+                return Task.CompletedTask;
+            }
 
             public void Send(string command)
             {

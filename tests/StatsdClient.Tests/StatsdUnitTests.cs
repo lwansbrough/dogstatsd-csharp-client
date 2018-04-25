@@ -29,7 +29,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Counting,int>("counter", 5);
-            Mock.Get(_udp).Verify(x => x.Send("counter:5|c"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:5|c"));
         }
 
         [Test]
@@ -37,7 +37,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Counting,int>("counter", -5);
-            Mock.Get(_udp).Verify(x => x.Send("counter:-5|c"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:-5|c"));
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Counting,int>("counter", 5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("counter:5|c|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:5|c|#tag1:true,tag2"));
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Counting,int>("counter", 5, sampleRate: 0.1);
-            Mock.Get(_udp).Verify(x => x.Send("counter:5|c|@0.1"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:5|c|@0.1"));
         }
 
         [Test]
@@ -61,14 +61,14 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Counting,int>("counter", 5, sampleRate: 0.1, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("counter:5|c|@0.1|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:5|c|@0.1|#tag1:true,tag2"));
         }
 
         [Test]
         public void send_increase_counter_counting_exception_fails_silently()
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
-            Mock.Get(_udp).Setup(x => x.Send(It.IsAny<string>())).Throws<Exception>();
+            Mock.Get(_udp).Setup(x => x.SendAsync(It.IsAny<string>())).Throws<Exception>();
             s.Send<Statsd.Counting,int>("counter", 5);
         }
 
@@ -120,7 +120,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Timing,int>("timer", 5);
-            Mock.Get(_udp).Verify(x => x.Send("timer:5|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:5|ms"));
         }
 
         [Test]
@@ -128,7 +128,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Timing,double>("timer", 5.5);
-            Mock.Get(_udp).Verify(x => x.Send("timer:5.5|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:5.5|ms"));
         }
 
         [Test]
@@ -136,7 +136,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Timing,int>("timer", 5, tags: new[] {"tag1:true"});
-            Mock.Get(_udp).Verify(x => x.Send("timer:5|ms|#tag1:true"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:5|ms|#tag1:true"));
         }
 
         [Test]
@@ -144,7 +144,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Timing,int>("timer", 5, sampleRate: 0.5);
-            Mock.Get(_udp).Verify(x => x.Send("timer:5|ms|@0.5"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:5|ms|@0.5"));
         }
 
         [Test]
@@ -152,13 +152,13 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Timing,int>("timer", 5, sampleRate: 0.5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("timer:5|ms|@0.5|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:5|ms|@0.5|#tag1:true,tag2"));
         }
 
         [Test]
         public void send_timer_exception_fails_silently()
         {
-            Mock.Get(_udp).Setup(x => x.Send(It.IsAny<string>())).Throws<Exception>();
+            Mock.Get(_udp).Setup(x => x.SendAsync(It.IsAny<string>())).Throws<Exception>();
             Statsd s = new Statsd(_udp);
             s.Send<Statsd.Timing,int>("timer", 5);
         }
@@ -174,7 +174,7 @@ namespace StatsdClient.Tests
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send(() => testMethod(), statName);
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms"));
         }
 
         [Test]
@@ -188,7 +188,7 @@ namespace StatsdClient.Tests
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send(() => testMethod(), statName, tags: new[] {"tag1:true", "tag2"});
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms|#tag1:true,tag2"));
         }
 
         [Test]
@@ -202,7 +202,7 @@ namespace StatsdClient.Tests
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send(() => testMethod(), statName, sampleRate: 1.1);
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms|@1.1"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms|@1.1"));
         }
 
         [Test]
@@ -216,7 +216,7 @@ namespace StatsdClient.Tests
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send(() => testMethod(), statName, sampleRate: 1.1, tags: new[] {"tag1:true", "tag2"});
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms|@1.1|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms|@1.1|#tag1:true,tag2"));
         }
 
         [Test]
@@ -228,9 +228,9 @@ namespace StatsdClient.Tests
             Mock.Get(_stopwatch).Setup(x => x.Get()).Returns(stopwatch);
 
             var s = new Statsd(_udp, _randomGenerator, _stopwatch);
-            Assert.Throws<InvalidOperationException>(() => s.Send(() => throw new InvalidOperationException(), statName));
+            Assert.Throws<AggregateException>(() => s.Send(() => throw new InvalidOperationException(), statName));
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms"));
         }
 
         [Test]
@@ -245,7 +245,7 @@ namespace StatsdClient.Tests
             int returnValue = 0;
             s.Send(() => returnValue = testMethod(), statName);
 
-            Mock.Get(_udp).Verify(x => x.Send("name:500|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("name:500|ms"));
             Assert.That(returnValue,Is.EqualTo(5));
         }
 
@@ -321,7 +321,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,int>("gauge", 5);
-            Mock.Get(_udp).Verify(x => x.Send("gauge:5|g"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:5|g"));
         }
 
         [Test]
@@ -329,7 +329,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,double>("gauge", 4.2);
-            Mock.Get(_udp).Verify(x => x.Send("gauge:4.2|g"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:4.2|g"));
         }
 
         [Test]
@@ -337,7 +337,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,int>("gauge", 5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("gauge:5|g|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:5|g|#tag1:true,tag2"));
         }
 
 
@@ -346,7 +346,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,int>("gauge", 5, sampleRate: 0.5);
-            Mock.Get(_udp).Verify(x => x.Send("gauge:5|g|@0.5"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:5|g|@0.5"));
         }
 
         [Test]
@@ -354,7 +354,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,int>("gauge", 5, sampleRate: 0.5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("gauge:5|g|@0.5|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:5|g|@0.5|#tag1:true,tag2"));
         }
 
         [Test]
@@ -362,13 +362,13 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Gauge,double>("gauge", 5.4, sampleRate: 0.5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("gauge:5.4|g|@0.5|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("gauge:5.4|g|@0.5|#tag1:true,tag2"));
         }
 
         [Test]
         public void send_gauge_exception_fails_silently()
         {
-            Mock.Get(_udp).Setup(x => x.Send(It.IsAny<string>())).Throws<Exception>();
+            Mock.Get(_udp).Setup(x => x.SendAsync(It.IsAny<string>())).Throws<Exception>();
             Statsd s = new Statsd(_udp);
             s.Send<Statsd.Gauge,int>("gauge", 5);
         }
@@ -468,7 +468,7 @@ namespace StatsdClient.Tests
             s.Add<Statsd.Timing,int>("timer", 1);
             s.Send();
 
-            Mock.Get(_udp).Verify(x => x.Send("counter:1|c|@0.1\ntimer:1|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:1|c|@0.1\ntimer:1|ms"));
         }
 
 
@@ -490,11 +490,11 @@ namespace StatsdClient.Tests
             s.Add<Statsd.Counting,int>("counter", 1);
             s.Send<Statsd.Timing,int>("timer", 1);
 
-            Mock.Get(_udp).Verify(x => x.Send("timer:1|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:1|ms"));
 
             s.Send();
 
-            Mock.Get(_udp).Verify(x => x.Send("counter:1|c"), Times.Never);
+            Mock.Get(_udp).Verify(x => x.SendAsync("counter:1|c"), Times.Never);
         }
 
         [Test]
@@ -504,7 +504,7 @@ namespace StatsdClient.Tests
             s.Add<Statsd.Counting,double>("counter", 1.1);
             s.Send<Statsd.Timing,int>("timer", 1);
 
-            Mock.Get(_udp).Verify(x => x.Send("timer:1|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:1|ms"));
         }
 
         [Test]
@@ -514,7 +514,7 @@ namespace StatsdClient.Tests
             s.Add<Statsd.Counting,double>("counter", 1.1);
             s.Send<Statsd.Timing,double>("timer", 1.1);
 
-            Mock.Get(_udp).Verify(x => x.Send("timer:1.1|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("timer:1.1|ms"));
         }
 
         // =-=-=-=- EVENT -=-=-=-=
@@ -525,7 +525,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text"));
         }
 
         [Test]
@@ -533,7 +533,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", alertType:"warning");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|t:warning"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|t:warning"));
         }
 
         [Test]
@@ -541,7 +541,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", aggregationKey: "key");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|k:key"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|k:key"));
         }
 
         [Test]
@@ -549,7 +549,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", sourceType: "source");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|s:source"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|s:source"));
         }
 
         [Test]
@@ -557,7 +557,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", dateHappened: 123456);
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|d:123456"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|d:123456"));
         }
 
         [Test]
@@ -565,7 +565,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", priority: "low");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|p:low"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|p:low"));
         }
 
         [Test]
@@ -573,7 +573,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", hostname: "hostname");
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|h:hostname"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|h:hostname"));
         }
 
         [Test]
@@ -581,7 +581,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("title", "text", tags: new[] { "tag1", "tag2" });
-            Mock.Get(_udp).Verify(x => x.Send("_e{5,4}:title|text|#tag1,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_e{5,4}:title|text|#tag1,tag2"));
         }
 
         [Test]
@@ -593,8 +593,8 @@ namespace StatsdClient.Tests
             var builder = BuildLongString(length);
             var title = builder;
 
-            var exception = Assert.Throws<Exception>(() => s.Send(title + "x", "text"));
-            Assert.That(exception.Message, Contains.Substring("payload is too big"));
+            var exception = Assert.Throws<AggregateException>(() => s.Send(title + "x", "text"));
+            Assert.That(exception.InnerException.Message, Contains.Substring("payload is too big"));
         }
 
         [Test]
@@ -608,7 +608,7 @@ namespace StatsdClient.Tests
 
             s.Send(title + "x", "text", truncateIfTooLong: true);
             var expected = string.Format("_e{{{0},4}}:{1}|text", length, title);
-            Mock.Get(_udp).Verify(x => x.Send(expected));
+            Mock.Get(_udp).Verify(x => x.SendAsync(expected));
         }
 
         [Test]
@@ -622,7 +622,7 @@ namespace StatsdClient.Tests
 
             s.Send("title", text + "x", truncateIfTooLong: true);
             var expected = string.Format("_e{{5,{0}}}:title|{1}", length, text);
-            Mock.Get(_udp).Verify(x => x.Send(expected));
+            Mock.Get(_udp).Verify(x => x.SendAsync(expected));
         }
 
         [Test]
@@ -638,7 +638,7 @@ namespace StatsdClient.Tests
 
             s.Send("title", text + "x");
             var expected = string.Format("_e{{5,{0}}}:title|{1}", length, text);
-            Mock.Get(_udp).Verify(x => x.Send(expected));
+            Mock.Get(_udp).Verify(x => x.SendAsync(expected));
         }
 
         private static string BuildLongString(int length)
@@ -658,7 +658,7 @@ namespace StatsdClient.Tests
             s.Send<Statsd.Counting,int>("counter", 5);
             s.Send<Statsd.Counting,int>("counter", 5);
 
-            Mock.Get(_udp).Verify(x => x.Send("a.prefix.counter:5|c"), Times.Exactly(2));
+            Mock.Get(_udp).Verify(x => x.SendAsync("a.prefix.counter:5|c"), Times.Exactly(2));
         }
 
         [Test]
@@ -670,7 +670,7 @@ namespace StatsdClient.Tests
             s.Add<Statsd.Timing,int>("timer", 1);
             s.Send();
 
-            Mock.Get(_udp).Verify(x => x.Send("another.prefix.counter:1|c|@0.1\nanother.prefix.timer:1|ms"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("another.prefix.counter:1|c|@0.1\nanother.prefix.timer:1|ms"));
         }
 
         private int testMethod()
@@ -686,7 +686,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Histogram,int> ("histogram", 5);
-            Mock.Get(_udp).Verify(x => x.Send ("histogram:5|h"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("histogram:5|h"));
         }
 
         [Test]
@@ -694,7 +694,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Histogram,double> ("histogram", 5.3);
-            Mock.Get(_udp).Verify(x => x.Send ("histogram:5.3|h"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("histogram:5.3|h"));
         }
 
         [Test]
@@ -702,7 +702,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Histogram,int>("histogram", 5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send ("histogram:5|h|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("histogram:5|h|#tag1:true,tag2"));
         }
 
         [Test]
@@ -710,7 +710,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Histogram,int>("histogram", 5, sampleRate: 0.5);
-            Mock.Get(_udp).Verify(x => x.Send ("histogram:5|h|@0.5"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("histogram:5|h|@0.5"));
         }
 
         [Test]
@@ -718,7 +718,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Histogram,int>("histogram", 5, sampleRate: 0.5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send ("histogram:5|h|@0.5|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("histogram:5|h|@0.5|#tag1:true,tag2"));
         }
 
         [Test]
@@ -778,7 +778,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,int>("set", 5);
-            Mock.Get(_udp).Verify(x => x.Send("set:5|s"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:5|s"));
         }
 
         [Test]
@@ -786,7 +786,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,string>("set", "objectname");
-            Mock.Get(_udp).Verify(x => x.Send("set:objectname|s"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:objectname|s"));
         }
 
         [Test]
@@ -794,7 +794,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd (_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,int> ("set", 5, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("set:5|s|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:5|s|#tag1:true,tag2"));
         }
 
         [Test]
@@ -802,7 +802,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,int>("set", 5, sampleRate: 0.1);
-            Mock.Get(_udp).Verify(x => x.Send("set:5|s|@0.1"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:5|s|@0.1"));
         }
 
         [Test]
@@ -810,7 +810,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd (_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,int> ("set", 5, sampleRate: 0.1, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("set:5|s|@0.1|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:5|s|@0.1|#tag1:true,tag2"));
         }
 
         [Test]
@@ -818,7 +818,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send<Statsd.Set,string>("set", "objectname", sampleRate: 0.1, tags: new[] {"tag1:true", "tag2"});
-            Mock.Get(_udp).Verify(x => x.Send("set:objectname|s|@0.1|#tag1:true,tag2"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("set:objectname|s|@0.1|#tag1:true,tag2"));
         }
 
 
@@ -888,7 +888,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0);
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0"));
         }
 
         [Test]
@@ -896,7 +896,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, timestamp: 1);
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|d:1"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|d:1"));
         }
 
         [Test]
@@ -904,7 +904,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, hostname: "hostname");
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|h:hostname"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|h:hostname"));
         }
 
         [Test]
@@ -912,7 +912,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, tags: new [] { "tag1:value1", "tag2", "tag3:value3" });
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|#tag1:value1,tag2,tag3:value3"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|#tag1:value1,tag2,tag3:value3"));
         }
 
         [Test]
@@ -920,7 +920,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, serviceCheckMessage: "message");
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|m:message"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|m:message"));
         }
 
         [Test]
@@ -928,7 +928,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
 
-            Assert.Throws<ArgumentException>(() => s.Send("name|", 0));
+            Assert.Throws<AggregateException>(() => s.Send("name|", 0));
         }
 
         [Test]
@@ -938,7 +938,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name" + newline, 0);
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name\\n|0"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name\\n|0"));
         }
 
         [Test]
@@ -946,7 +946,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, serviceCheckMessage: "m:message");
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|m:m\\:message"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|m:m\\:message"));
         }
 
         [Test]
@@ -954,7 +954,7 @@ namespace StatsdClient.Tests
         {
             Statsd s = new Statsd(_udp, _randomGenerator, _stopwatch);
             s.Send("name", 0, 1, "hostname", new[] { "tag1:value1", "tag2", "tag3:value3" }, "message");
-            Mock.Get(_udp).Verify(x => x.Send("_sc|name|0|d:1|h:hostname|#tag1:value1,tag2,tag3:value3|m:message"));
+            Mock.Get(_udp).Verify(x => x.SendAsync("_sc|name|0|d:1|h:hostname|#tag1:value1,tag2,tag3:value3|m:message"));
         }
 
         [Test]
@@ -966,8 +966,8 @@ namespace StatsdClient.Tests
             var builder = BuildLongString(length);
             var message = builder;
 
-            var exception = Assert.Throws<Exception>(() => s.Send("name", 0, serviceCheckMessage: message + "x"));
-            Assert.That(exception.Message, Contains.Substring("payload is too big"));
+            var exception = Assert.Throws<AggregateException>(() => s.Send("name", 0, serviceCheckMessage: message + "x"));
+            Assert.That(exception.InnerException.Message, Contains.Substring("payload is too big"));
         }
 
         [Test]
@@ -983,7 +983,7 @@ namespace StatsdClient.Tests
 
 
             var expected = "_sc|name|0|m:" + message;
-            Mock.Get(_udp).Verify(x => x.Send(expected));
+            Mock.Get(_udp).Verify(x => x.SendAsync(expected));
         }
 
         [Test]
@@ -995,8 +995,8 @@ namespace StatsdClient.Tests
             var builder = BuildLongString(length);
             var name = builder;
 
-            var exception = Assert.Throws<ArgumentException>(() => s.Send(name + "x", 0, truncateIfTooLong: true));
-            Assert.That(exception.Message, Contains.Substring("payload is too big"));
+            var exception = Assert.Throws<AggregateException>(() => s.Send(name + "x", 0, truncateIfTooLong: true));
+            Assert.That(exception.InnerException.Message, Contains.Substring("payload is too big"));
         }
 
         [Test]
